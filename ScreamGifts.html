@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Stars Roulette</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #ffd700, #ffed4e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stars-balance {
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid #ffd700;
+            border-radius: 50px;
+            padding: 10px 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .roulette-container {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .roulette-wheel {
+            height: 200px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .roulette-items {
+            display: flex;
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            transition: transform 3s cubic-bezier(0.2, 0.8, 0.3, 1);
+        }
+
+        .roulette-item {
+            width: 150px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .roulette-item.active {
+            background: rgba(255, 215, 0, 0.2);
+            border: 2px solid #ffd700;
+        }
+
+        .gift-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .gift-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .spin-button {
+            background: linear-gradient(90deg, #ffd700, #ffed4e);
+            border: none;
+            border-radius: 50px;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a1a2e;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .spin-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .spin-button:disabled {
+            background: #666;
+            color: #999;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .cost-info {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .inventory-section {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .inventory-section h2 {
+            margin-bottom: 15px;
+            text-align: center;
+            color: #ffd700;
+        }
+
+        .inventory-items {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .inventory-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .withdraw-button {
+            background: rgba(255, 215, 0, 0.2);
+            border: 1px solid #ffd700;
+            border-radius: 5px;
+            padding: 5px 10px;
+            color: #ffd700;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .withdraw-button:hover {
+            background: rgba(255, 215, 0, 0.3);
+        }
+
+        .telegram-payment {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 20px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .telegram-payment h2 {
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+
+        .payment-button {
+            background: linear-gradient(90deg, #0088cc, #34b7f1);
+            border: none;
+            border-radius: 50px;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            box-shadow: 0 5px 15px rgba(52, 183, 241, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .payment-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(52, 183, 241, 0.4);
+        }
+
+        .result-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .result-modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .result-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            max-width: 300px;
+            width: 90%;
+            border: 2px solid #ffd700;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.2);
+        }
+
+        .result-gift {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .result-text {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #ffd700;
+        }
+
+        .close-result {
+            background: #ffd700;
+            border: none;
+            border-radius: 50px;
+            padding: 10px 20px;
+            font-weight: bold;
+            color: #1a1a2e;
+            cursor: pointer;
+        }
+
+        .empty-inventory {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 20px;
+            color: #aaa;
+        }
+
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        @media (max-width: 500px) {
+            .inventory-items {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Telegram Stars Roulette</h1>
+            <div class="stars-balance">
+                <span>⭐</span>
+                <span id="stars-count">0</span>
+            </div>
+        </div>
+
+        <div class="roulette-container">
+            <div class="roulette-wheel">
+                <div class="roulette-items" id="roulette-items">
+                    <!-- Roulette items will be generated by JavaScript -->
+                </div>
+            </div>
+            <button class="spin-button" id="spin-button">Крутить за 25 ⭐</button>
+            <div class="cost-info">Каждый спин стоит 25 звезд</div>
+        </div>
+
+        <div class="inventory-section">
+            <h2>Инвентарь подарков</h2>
+            <div class="inventory-items" id="inventory-items">
+                <div class="empty-inventory">У вас пока нет подарков</div>
+            </div>
+        </div>
+
+        <div class="telegram-payment">
+            <h2>Оплатить звездами Telegram</h2>
+            <button class="payment-button" id="payment-button">
+                <span>⭐</span>
+                Купить 25 звезд для спина
+            </button>
+        </div>
+    </div>
+
+    <div class="result-modal" id="result-modal">
+        <div class="result-content">
+            <div class="result-gift" id="result-gift">🎁</div>
+            <div class="result-text" id="result-text">Вы выиграли подарок за 15 ⭐!</div>
+            <button class="close-result" id="close-result">Забрать</button>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация Telegram Web App
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.MainButton.setText("Открыть меню").show();
+
+        // Получаем данные пользователя
+        const user = tg.initDataUnsafe?.user;
+        const userId = user?.id || 'anonymous';
+
+        // Initial state
+        let stars = 0;
+        let inventory = [];
+        const gifts = [
+            { value: 15, icon: "🎁", name: "Подарок за 15 звезд" },
+            { value: 25, icon: "🎉", name: "Подарок за 25 звезд" },
+            { value: 50, icon: "🏆", name: "Подарок за 50 звезд" },
+            { value: 100, icon: "💎", name: "Подарок за 100 звезд" }
+        ];
+
+        // DOM elements
+        const starsCountElement = document.getElementById('stars-count');
+        const rouletteItemsElement = document.getElementById('roulette-items');
+        const spinButton = document.getElementById('spin-button');
+        const inventoryItemsElement = document.getElementById('inventory-items');
+        const resultModal = document.getElementById('result-modal');
+        const resultGift = document.getElementById('result-gift');
+        const resultText = document.getElementById('result-text');
+        const closeResult = document.getElementById('close-result');
+        const paymentButton = document.getElementById('payment-button');
+
+        // Загрузка данных из localStorage
+        function loadUserData() {
+            try {
+                const savedData = localStorage.getItem(`tg_roulette_${userId}`);
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    stars = data.stars || 0;
+                    inventory = data.inventory || [];
+                }
+            } catch (e) {
+                console.error('Error loading user data:', e);
+            }
+            updateStarsDisplay();
+            updateInventoryDisplay();
+        }
+
+        // Сохранение данных в localStorage
+        function saveUserData() {
+            try {
+                const data = {
+                    stars: stars,
+                    inventory: inventory,
+                    lastUpdate: new Date().toISOString()
+                };
+                localStorage.setItem(`tg_roulette_${userId}`, JSON.stringify(data));
+            } catch (e) {
+                console.error('Error saving user data:', e);
+            }
+        }
+
+        // Initialize roulette items
+        function initRoulette() {
+            rouletteItemsElement.innerHTML = '';
+            // Create multiple copies of gifts to make the roulette longer
+            for (let i = 0; i < 10; i++) {
+                gifts.forEach((gift, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'roulette-item';
+                    item.innerHTML = `
+                        <div class="gift-icon">${gift.icon}</div>
+                        <div class="gift-value">${gift.value} ⭐</div>
+                    `;
+                    rouletteItemsElement.appendChild(item);
+                });
+            }
+        }
+
+        // Update stars display
+        function updateStarsDisplay() {
+            starsCountElement.textContent = stars;
+            spinButton.disabled = stars < 25;
+            spinButton.textContent = stars >= 25 ? 'Крутить за 25 ⭐' : 'Недостаточно звезд';
+        }
+
+        // Update inventory display
+        function updateInventoryDisplay() {
+            if (inventory.length === 0) {
+                inventoryItemsElement.innerHTML = '<div class="empty-inventory">У вас пока нет подарков</div>';
+                return;
+            }
+
+            inventoryItemsElement.innerHTML = '';
+            inventory.forEach((item, index) => {
+                const inventoryItem = document.createElement('div');
+                inventoryItem.className = 'inventory-item';
+                inventoryItem.innerHTML = `
+                    <div class="gift-icon">${item.icon}</div>
+                    <div>${item.name}</div>
+                    <button class="withdraw-button" data-index="${index}">Вывести</button>
+                `;
+                inventoryItemsElement.appendChild(inventoryItem);
+            });
+
+            // Add event listeners to withdraw buttons
+            document.querySelectorAll('.withdraw-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    withdrawGift(index);
+                });
+            });
+        }
+
+        // Spin the roulette
+        function spinRoulette() {
+            if (stars < 25) return;
+
+            // Deduct stars
+            stars -= 25;
+            updateStarsDisplay();
+            saveUserData();
+
+            // Disable spin button during animation
+            spinButton.disabled = true;
+
+            // Calculate position - always lands on 15 stars gift
+            const targetGiftIndex = 0; // Index of 15 stars gift
+            const itemWidth = 150;
+            const itemsPerSet = gifts.length;
+            const totalItems = itemsPerSet * 10; // 10 sets of gifts
+            const targetPosition = (5 * itemsPerSet + targetGiftIndex) * itemWidth; // Land on 15 stars gift
+
+            // Reset position to start animation from the beginning
+            rouletteItemsElement.style.transition = 'none';
+            rouletteItemsElement.style.transform = 'translateX(0)';
+
+            // Force reflow
+            void rouletteItemsElement.offsetWidth;
+
+            // Animate the roulette
+            rouletteItemsElement.style.transition = 'transform 3s cubic-bezier(0.2, 0.8, 0.3, 1)';
+            rouletteItemsElement.style.transform = `translateX(-${targetPosition}px)`;
+
+            // Show result after animation
+            setTimeout(() => {
+                // Add gift to inventory
+                const wonGift = {...gifts[0]}; // Always the 15 stars gift
+                inventory.push(wonGift);
+                updateInventoryDisplay();
+                saveUserData();
+
+                // Show result modal
+                resultGift.textContent = wonGift.icon;
+                resultText.textContent = `Вы выиграли ${wonGift.name}!`;
+                resultModal.classList.add('active');
+            }, 3000);
+        }
+
+        // Withdraw gift
+        function withdrawGift(index) {
+            if (index >= 0 && index < inventory.length) {
+                const gift = inventory[index];
+
+                // Отправляем данные о выводе в Telegram бот
+                if (tg && tg.sendData) {
+                    const withdrawData = {
+                        action: 'withdraw_gift',
+                        gift: gift,
+                        userId: userId
+                    };
+                    tg.sendData(JSON.stringify(withdrawData));
+                }
+
+                alert(`Подарок "${gift.name}" отправлен на вывод!`);
+                inventory.splice(index, 1);
+                updateInventoryDisplay();
+                saveUserData();
+            }
+        }
+
+        // Real Telegram Stars payment
+        function processTelegramPayment() {
+            if (!tg) {
+                alert('Ошибка: Приложение должно быть запущено в Telegram');
+                return;
+            }
+
+            paymentButton.classList.add('loading');
+            paymentButton.textContent = 'Обработка...';
+
+            // Создаем инвойс для оплаты
+            const invoice = {
+                title: "Покупка спина в рулетке",
+                description: "25 звезд для одного прокрута рулетки",
+                payload: `${userId}_spin_payment_${Date.now()}`,
+                currency: "XTR", // Telegram Stars currency
+                prices: [
+                    {
+                        label: "25 Stars",
+                        amount: 25
+                    }
+                ]
+            };
+
+            // Открываем платежный интерфейс Telegram
+            tg.openInvoice(invoice, (status) => {
+                paymentButton.classList.remove('loading');
+                paymentButton.innerHTML = '<span>⭐</span> Купить 25 звезд для спина';
+
+                if (status === 'paid') {
+                    // Платеж успешен
+                    stars += 25;
+                    updateStarsDisplay();
+                    saveUserData();
+
+                    // Отправляем подтверждение платежа
+                    if (tg.sendData) {
+                        const paymentData = {
+                            action: 'payment_success',
+                            amount: 25,
+                            userId: userId,
+                            payload: invoice.payload
+                        };
+                        tg.sendData(JSON.stringify(paymentData));
+                    }
+
+                    tg.showPopup({
+                        title: "Успешно!",
+                        message: "25 звезд добавлены на ваш счет!",
+                        buttons: [{ type: "ok" }]
+                    });
+                } else if (status === 'failed') {
+                    tg.showPopup({
+                        title: "Ошибка",
+                        message: "Платеж не прошел. Попробуйте еще раз.",
+                        buttons: [{ type: "ok" }]
+                    });
+                } else if (status === 'cancelled') {
+                    // Пользователь отменил платеж
+                }
+            });
+        }
+
+        // Event listeners
+        spinButton.addEventListener('click', spinRoulette);
+
+        closeResult.addEventListener('click', () => {
+            resultModal.classList.remove('active');
+            spinButton.disabled = stars < 25;
+        });
+
+        paymentButton.addEventListener('click', processTelegramPayment);
+
+        // Обработка данных от Telegram бота
+        tg.onEvent('webAppDataReceived', (data) => {
+            try {
+                const receivedData = JSON.parse(data);
+                if (receivedData.action === 'add_stars') {
+                    stars += receivedData.amount;
+                    updateStarsDisplay();
+                    saveUserData();
+                }
+            } catch (e) {
+                console.error('Error processing web app data:', e);
+            }
+        });
+
+        // Initialize
+        initRoulette();
+        loadUserData();
+
+        // Показываем информацию о пользователе
+        if (user) {
+            console.log('User:', user);
+        }
+    </script>
+</body>
+</html>
